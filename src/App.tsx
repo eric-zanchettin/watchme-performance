@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { SideBar } from './components/SideBar';
 import { Content } from './components/Content';
@@ -37,23 +37,34 @@ export function App() {
 
   useEffect(() => {
     api.get<GenreResponseProps[]>('genres').then(response => {
-      setGenres(response.data);
+      setGenres(() => response.data);
+
+      const selectedGenreObj = response.data.filter(genre => {
+        return genre.id === Number(selectedGenreId);
+      });
+
+      setSelectedGenre(selectedGenreObj[0]);
     });
   }, []);
 
   useEffect(() => {
     api.get<MovieProps[]>(`movies/?Genre_id=${selectedGenreId}`).then(response => {
       setMovies(response.data);
+    },);
+
+    const selectedGenreObj = genres.filter(genre => {
+      return genre.id === Number(selectedGenreId);
     });
 
-    api.get<GenreResponseProps>(`genres/${selectedGenreId}`).then(response => {
-      setSelectedGenre(response.data);
-    })
+    if (selectedGenreObj.length > 0) {
+      setSelectedGenre(selectedGenreObj[0]);
+    };
+
   }, [selectedGenreId]);
 
-  function handleClickButton(id: number) {
+  const handleClickButton = useCallback((id: number) => {
     setSelectedGenreId(id);
-  }
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
